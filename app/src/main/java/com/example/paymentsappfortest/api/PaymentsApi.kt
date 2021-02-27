@@ -3,8 +3,7 @@ package com.example.paymentsappfortest.api
 import com.example.paymentsappfortest.data.LoginResponse
 import com.example.paymentsappfortest.data.PaymentsResponse
 import okhttp3.RequestBody
-import okhttp3.ResponseBody
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.*
 
 interface PaymentsApi {
@@ -16,16 +15,16 @@ interface PaymentsApi {
     @Multipart
     @Headers("app-key: 12345", "v: 1")
     @POST("login")
-    fun login(
-        @Part("login") login: RequestBody,
-        @Part("password") password: RequestBody
-    ) : Call<LoginResponse> //make it suspend
+    suspend fun login(
+            @Part("login") login: RequestBody,
+            @Part("password") password: RequestBody
+    ): Response<LoginResponse> //Call
 
     @Headers("app-key: 12345", "v: 1")
     @GET("payments")
-    fun getPayments(
-        @Query("token")
-        paymentToken: Int = 123456789
-    ) : Call<PaymentsResponse>
+    suspend fun getPayments(
+            @Query("token")
+            paymentToken: Int = 123456789
+    ): Response<PaymentsResponse> //Call
 
 }

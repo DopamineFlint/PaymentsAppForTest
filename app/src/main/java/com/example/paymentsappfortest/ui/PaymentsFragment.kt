@@ -3,10 +3,8 @@ package com.example.paymentsappfortest.ui
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.paymentsappfortest.R
@@ -14,9 +12,9 @@ import com.example.paymentsappfortest.api.RetrofitInstance
 import com.example.paymentsappfortest.data.PaymentsResponse
 import kotlinx.android.synthetic.main.fragment_payments.*
 import kotlinx.android.synthetic.main.fragment_payments.view.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class PaymentsFragment : Fragment(R.layout.fragment_payments) {
 
@@ -29,32 +27,26 @@ class PaymentsFragment : Fragment(R.layout.fragment_payments) {
         val recyclerView = view.recycler_view
         recyclerView.adapter = paymentsAdapter
         recyclerView.layoutManager = LinearLayoutManager(
-            requireContext(),
-            LinearLayoutManager.VERTICAL,
-            false
+                requireContext(),
+                LinearLayoutManager.VERTICAL,
+                false
         )
 
-        val call: Call<PaymentsResponse> = RetrofitInstance.api.getPayments()
-        call.enqueue(object : Callback<PaymentsResponse> {
-            override fun onResponse(call: Call<PaymentsResponse>, response: Response<PaymentsResponse>) {
-                if (!response.isSuccessful) {
-                    return
-                }
-
+        GlobalScope.launch(Dispatchers.IO) {
+            val response = RetrofitInstance.api.getPayments()
+            if (response.isSuccessful) {
                 val payments: PaymentsResponse? = response.body()
-                paymentsAdapter.setData(payments)
+                launch(Dispatchers.Main) {
+                    paymentsAdapter.setData(payments)
+                }
             }
-
-            override fun onFailure(call: Call<PaymentsResponse>, t: Throwable) {
-                Log.d(LogInFragment.NAME_LOG, "ERROR " + t.message!!)
-            }
-        })
+        }
 
         button_logout.setOnClickListener {
             val preferences: SharedPreferences =
-                androidx.preference.PreferenceManager.getDefaultSharedPreferences(
-                    requireContext()
-                )
+                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(
+                            requireContext()
+                    )
             val editor: SharedPreferences.Editor = preferences.edit()
             editor.putString("remember", "false")
             editor.apply()
